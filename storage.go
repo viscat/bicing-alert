@@ -1,0 +1,91 @@
+package main
+
+import (
+	"bicingalert/bicing"
+	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
+	log "github.com/Sirupsen/logrus"
+	"time"
+	"math"
+)
+
+const MINUTES_NOT_UPDATED_WARNING = 5
+const SECONDS_BETWEEN_UPDATES = 60
+
+
+
+func UpdateBicingStatus() {
+
+	defer db.Session.Close()
+	lastUpdate := GetLastUpdate()
+
+	for {
+		status, err := bicing.GetStationsStatus()
+		if err != nil {
+			panic(err)
+		}
+
+		if lastUpdate != status.UpdateTime {
+			log.Info("Updating status")
+			status = update(status, lastUpdate)
+		} else {
+			log.Info("No new status update available")
+		}
+
+		if secondsFromLastUpdate := time.Now().Unix() - status.UpdateTime;
+			secondsFromLastUpdate > MINUTES_NOT_UPDATED_WARNING*int64(time.Minute) {
+			log.Warnf("Bicing API didn't update since %v seconds", secondsFromLastUpdate)
+
+		}
+		waitUntilNextUpdate(status)
+	}
+
+}
+
+func GetLastUpdate() int64 {
+	res := db.C("StatusUpdate").Find(bson.M{}).Sort("-timestamp").Limit(1)
+	statusUpdate := StatusUpdate{}
+	res.One(&statusUpdate)
+	lastUpdate := statusUpdate.Timestamp
+	return lastUpdate
+}
+
+func waitUntilNextUpdate(status bicing.Status) {
+	secondsForNextUpdate := getSecondsForNextUpdate(status)
+	log.Infof("Next update will be in %v seconds", secondsForNextUpdate)
+	time.Sleep(time.Duration(secondsForNextUpdate * int64(time.Second)))
+}
+
+func update(status bicing.Status, lastUpdate int64) bicing.Status {
+	var stations []Station = make([]Station, len(status.Stations))
+	var statusUpdate StatusUpdate = StatusUpdate{
+		Timestamp:     status.UpdateTime,
+		StationStatus: make([]StationStatus, len(status.Stations)),
+	}
+
+	for k, station := range status.Stations {
+		stations[k] = NewStation(station)
+		statusUpdate.StationStatus[k] = NewStationStatus(station)
+		_, err := db.C("Station").UpsertId(stations[k].Id, stations[k])
+		if err != nil {
+			log.Error(err)
+		}
+	}
+	n, err := db.C("StatusUpdate").Find(bson.M{"timestamp": status.UpdateTime}).Count()
+	if n == 0 && err == nil {
+		err = db.C("StatusUpdate").Insert(statusUpdate)
+		lastUpdate = statusUpdate.Timestamp
+		if err != nil {
+			log.Error(err)
+		} else {
+			log.Info("Bicing status updated correctly")
+		}
+	} else if err != nil {
+		log.Error(err)
+	}
+	return status
+}
+
+func getSecondsForNextUpdate(status bicing.Status) int64 {
+	return int64(math.Max(0, float64((status.UpdateTime+SECONDS_BETWEEN_UPDATES+1)-time.Now().Unix())))
+}
