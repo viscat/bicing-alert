@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 )
 
 const API_URI = "http://wservice.viabicing.cat/v2"
@@ -21,7 +22,7 @@ func GetStationsStatus() (Status, error) {
 	if err != nil {
 		return Status{}, fmt.Errorf("Error parsing response: %v", err)
 	}
-
+os.Getwd()
 	var status Status
 	err = json.Unmarshal(body, &status)
 

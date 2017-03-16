@@ -2,37 +2,20 @@ package main
 
 import (
 	"os"
-	"fmt"
 	"flag"
 	"github.com/rifflock/lfshook"
 	log "github.com/Sirupsen/logrus"
+	"bicingalert/app"
 )
 
 func main() {
 
-
-	if len(os.Args) < 2 {
-		fmt.Fprintln(os.Stderr, "Must specify a mode: update")
-		os.Exit(1)
-	}
-
-
 	verbose := flag.Bool("v", false, "Show detailed information")
-	update := flag.Bool("update", false, "Update bicing status")
-
 	flag.Parse()
-
 	initLogger(*verbose)
 
-	switch {
-		case *update:
-			UpdateBicingStatus()
-		default:
-			fmt.Println("Must specify an action: update")
-
-
-	}
-
+	storage := app.Storage{Db: app.GetBicingDb()}
+	storage.UpdateBicingStatus()
 }
 
 func initLogger(verbosity bool) {
