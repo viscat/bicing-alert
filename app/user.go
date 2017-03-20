@@ -6,10 +6,9 @@ import (
 )
 
 type User struct {
-	Email string
+	Email  string
 	Alerts []Alert
 }
-
 
 type UserRepository struct {
 	Db mgo.Database

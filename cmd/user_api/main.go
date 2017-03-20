@@ -13,7 +13,7 @@ func main() {
 	http.HandleFunc("/logout", app.LogOutHandler)
 	http.HandleFunc("/auth", googleAuth.AuthHandler)
 	http.Handle("/", app.UserHandler{
-		Db: db,
+		Db:    db,
 		Users: app.UserRepository{db},
 	})
 

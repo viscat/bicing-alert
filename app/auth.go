@@ -1,42 +1,41 @@
 package app
 
 import (
-	"io/ioutil"
+	"context"
+	"crypto/rand"
+	"encoding/base64"
 	"encoding/json"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
-	"crypto/rand"
-	"encoding/base64"
+	"io/ioutil"
 	"net/http"
-	"context"
 	"path/filepath"
 )
 
 type Credentials struct {
-	Cid string `json:"clientId"`
+	Cid     string `json:"clientId"`
 	Csecret string `json:"secret"`
 }
 
 type GoogleUser struct {
-	Sub string `json:"sub"`
-	Name string `json:"name"`
-	GivenName string `json:"given_name"`
-	FamilyName string `json:"family_name"`
-	Profile string `json:"profile"`
-	Picture string `json:"picture"`
-	Email string `json:"email"`
+	Sub           string `json:"sub"`
+	Name          string `json:"name"`
+	GivenName     string `json:"given_name"`
+	FamilyName    string `json:"family_name"`
+	Profile       string `json:"profile"`
+	Picture       string `json:"picture"`
+	Email         string `json:"email"`
 	EmailVerified string `json:"email_verified"`
-	Gender string `json:"gender"`
+	Gender        string `json:"gender"`
 }
 
 type GoogleAuth struct {
 	credentials Credentials
-	conf *oauth2.Config
-	state string
+	conf        *oauth2.Config
+	state       string
 }
 
-
-func NewGoogleAuth(redirectUrl string) GoogleAuth{
+func NewGoogleAuth(redirectUrl string) GoogleAuth {
 
 	credentials := loadCredentials()
 	conf := &oauth2.Config{
@@ -89,8 +88,6 @@ func (g GoogleAuth) getState(r *http.Request) string {
 func (g GoogleAuth) setState(w http.ResponseWriter, state string) {
 	http.SetCookie(w, &http.Cookie{Name: "state", Value: state})
 }
-
-
 
 func (g GoogleAuth) AuthHandler(w http.ResponseWriter, r *http.Request) {
 

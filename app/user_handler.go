@@ -1,15 +1,15 @@
 package app
 
 import (
-	"net/http"
+	"errors"
 	"fmt"
 	"gopkg.in/mgo.v2"
-	"errors"
+	"net/http"
 	"time"
 )
 
 type UserHandler struct {
-	Db mgo.Database
+	Db    mgo.Database
 	Users UserRepository
 }
 
@@ -38,7 +38,7 @@ func addUserSession(w http.ResponseWriter, gUser GoogleUser) {
 }
 
 func removeUserSession(w http.ResponseWriter, r *http.Request) {
-	http.SetCookie(w, &http.Cookie{Name: "sessionId", Value: "", Expires: time.Time{} })
+	http.SetCookie(w, &http.Cookie{Name: "sessionId", Value: "", Expires: time.Time{}})
 	delete(authUsers, getSessionId(r))
 }
 
@@ -56,14 +56,13 @@ func (u UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	user, err := u.getUser(r)
 
 	if err == nil {
-		fmt.Fprintf(w,"<html><body>Welcome %v. <a href='/logout'>logout</a> </body></html>", user.Email)
+		fmt.Fprintf(w, "<html><body>Welcome %v. <a href='/logout'>logout</a> </body></html>", user.Email)
 		return
 	}
 
 	if err == notLoggedIn {
-		fmt.Fprint(w,"<html><body>You are not logged in:  <a href='/login'>login here</a></body></html>")
+		fmt.Fprint(w, "<html><body>You are not logged in:  <a href='/login'>login here</a></body></html>")
 	}
-
 
 }
 
@@ -72,7 +71,7 @@ func LogOutHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 }
 
-func (u UserHandler) getUser(r *http.Request) (User, error){
+func (u UserHandler) getUser(r *http.Request) (User, error) {
 
 	userEmail, ok := authUsers[getSessionId(r)]
 	if !ok {
@@ -85,7 +84,6 @@ func (u UserHandler) getUser(r *http.Request) (User, error){
 		return user, nil
 	}
 
-
 	if err == mgo.ErrNotFound {
 		user, err := u.Users.New(string(userEmail))
 		if err != nil {
@@ -96,4 +94,3 @@ func (u UserHandler) getUser(r *http.Request) (User, error){
 
 	return User{}, err
 }
-

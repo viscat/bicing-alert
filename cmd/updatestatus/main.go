@@ -1,11 +1,11 @@
 package main
 
 import (
-	"os"
-	"flag"
-	"github.com/rifflock/lfshook"
-	log "github.com/Sirupsen/logrus"
 	"bicingalert/app"
+	"flag"
+	log "github.com/Sirupsen/logrus"
+	"github.com/rifflock/lfshook"
+	"os"
 )
 
 func main() {

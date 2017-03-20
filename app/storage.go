@@ -2,21 +2,19 @@ package app
 
 import (
 	"bicingalert/bicing"
-	"gopkg.in/mgo.v2/bson"
 	log "github.com/Sirupsen/logrus"
-	"time"
-	"math"
 	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
+	"math"
+	"time"
 )
 
 const MINUTES_NOT_UPDATED_WARNING = 5
 const SECONDS_BETWEEN_UPDATES = 60
 
-
 type Storage struct {
 	Db mgo.Database
 }
-
 
 func (s Storage) UpdateBicingStatus() {
 
@@ -35,8 +33,7 @@ func (s Storage) UpdateBicingStatus() {
 			log.Info("No new status update available")
 		}
 
-		if secondsFromLastUpdate := time.Now().Unix() - status.UpdateTime;
-			secondsFromLastUpdate > MINUTES_NOT_UPDATED_WARNING*int64(time.Minute) {
+		if secondsFromLastUpdate := time.Now().Unix() - status.UpdateTime; secondsFromLastUpdate > MINUTES_NOT_UPDATED_WARNING*int64(time.Minute) {
 			log.Warnf("Bicing API didn't update since %v seconds", secondsFromLastUpdate)
 
 		}
